@@ -11,4 +11,4 @@ Developers Guide
    :caption: Contents:
 
    getting-started.rst
-   contributing.rst
+   ../../../CONTRIBUTING.rst
