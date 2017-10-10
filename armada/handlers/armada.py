@@ -18,9 +18,10 @@ import yaml
 from oslo_log import log as logging
 from supermutes.dot import dotify
 
-from chartbuilder import ChartBuilder
-from tiller import Tiller
-from manifest import Manifest
+from armada.handlers.chartbuilder import ChartBuilder
+from armada.handlers.tiller import Tiller
+from armada.handlers.manifest import Manifest
+from armada.handlers.override import Override
 
 from ..exceptions import armada_exceptions
 from ..exceptions import source_exceptions
@@ -50,11 +51,12 @@ class Armada(object):
                  disable_update_post=False,
                  enable_chart_cleanup=False,
                  dry_run=False,
+                 set_ovr=None,
                  wait=False,
                  timeout=DEFAULT_TIMEOUT,
                  tiller_host=None,
                  tiller_port=44134,
-                 debug=False):
+                 values=None):
         '''
         Initialize the Armada Engine and establish
         a connection to Tiller
@@ -64,17 +66,13 @@ class Armada(object):
         self.disable_update_post = disable_update_post
         self.enable_chart_cleanup = enable_chart_cleanup
         self.dry_run = dry_run
+        self.overrides = set_ovr
         self.wait = wait
         self.timeout = timeout
         self.tiller = Tiller(tiller_host=tiller_host, tiller_port=tiller_port)
-        self.documents = list(yaml.safe_load_all(file))
+        self.values = values
+        self.documents = file
         self.config = None
-        self.debug = debug
-
-        # Set debug value
-        # Define a default handler at INFO logging level
-        if self.debug:
-            logging.basicConfig(level=logging.DEBUG)
 
     def get_armada_manifest(self):
         return Manifest(self.documents).get_manifest()
@@ -92,18 +90,25 @@ class Armada(object):
         Perform a series of checks and operations to ensure proper deployment
         '''
 
-        # Ensure tiller is available and yaml is valid
+        # Ensure tiller is available and manifest is valid
         if not self.tiller.tiller_status():
             raise tiller_exceptions.TillerServicesUnavailableException()
+
         if not lint.validate_armada_documents(self.documents):
             raise lint_exceptions.InvalidManifestException()
 
+        # Override manifest values if --set flag is used
+        if self.overrides or self.values:
+            self.documents = Override(
+                self.documents, overrides=self.overrides,
+                values=self.values).update_manifests()
+
+        # Get config and validate
         self.config = self.get_armada_manifest()
 
         if not lint.validate_armada_object(self.config):
-            raise lint_exceptions.InvalidArmadaObjectExceptionl()
+            raise lint_exceptions.InvalidArmadaObjectException()
 
-        self.config = self.get_armada_manifest()
         # Purge known releases that have failed and are in the current yaml
         prefix = self.config.get(KEYWORD_ARMADA).get(KEYWORD_PREFIX)
         failed_releases = self.get_releases_by_status(STATUS_FAILED)
@@ -182,8 +187,8 @@ class Armada(object):
         '''
 
         msg = {
-            'installed': [],
-            'upgraded': [],
+            'install': [],
+            'upgrade': [],
             'diff': []
         }
 
@@ -222,8 +227,6 @@ class Armada(object):
                 pre_actions = {}
                 post_actions = {}
 
-                LOG.info('%s', chart.release)
-
                 if chart.release is None:
                     continue
 
@@ -234,8 +237,11 @@ class Armada(object):
                 chart_timeout = self.timeout
                 if chart_wait:
                     if chart_timeout == DEFAULT_TIMEOUT:
-                        chart_timeout = getattr(chart, 'timeout',
-                                                chart_timeout)
+                        try:
+                            chart_timeout = getattr(
+                                chart, 'timeout', DEFAULT_TIMEOUT)
+                        except:
+                            LOG.debug("Set Default timeout")
 
                 chartbuilder = ChartBuilder(chart)
                 protoc_chart = chartbuilder.get_helm_chart()
@@ -294,7 +300,7 @@ class Armada(object):
                                                wait=chart_wait,
                                                timeout=chart_timeout)
 
-                    msg['upgraded'].append(prefix_chart)
+                    msg['upgrade'].append(prefix_chart)
 
                 # process install
                 else:
@@ -307,7 +313,7 @@ class Armada(object):
                                                 wait=chart_wait,
                                                 timeout=chart_timeout)
 
-                    msg['installed'].append(prefix_chart)
+                    msg['install'].append(prefix_chart)
 
                 LOG.debug("Cleaning up chart source in %s",
                           chartbuilder.source_directory)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base_exception as base
+import armada.exceptions.base_exception as base
 
 
 class ApiException(base.ArmadaBaseException):
@@ -28,6 +28,24 @@ class ApiBaseException(ApiException):
 
 
 class ApiJsonException(ApiException):
+    '''Exception that occurs during chart cleanup.'''
+
+    message = 'There was an error listing the helm chart releases.'
+
+
+class ClientUnauthorizedError(ApiException):
+    '''Exception that occurs during chart cleanup.'''
+
+    message = 'There was an error listing the helm chart releases.'
+
+
+class ClientForbiddenError(ApiException):
+    '''Exception that occurs during chart cleanup.'''
+
+    message = 'There was an error listing the helm chart releases.'
+
+
+class ClientError(ApiException):
     '''Exception that occurs during chart cleanup.'''
 
     message = 'There was an error listing the helm chart releases.'

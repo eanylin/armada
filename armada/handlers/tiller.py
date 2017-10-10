@@ -31,7 +31,7 @@ from oslo_log import log as logging
 from ..const import STATUS_DEPLOYED, STATUS_FAILED
 from ..exceptions import tiller_exceptions as ex
 from ..utils.release import release_prefix
-from k8s import K8s
+from armada.handlers.k8s import K8s
 
 
 TILLER_PORT = 44134
@@ -380,8 +380,9 @@ class Tiller(object):
         try:
 
             stub = ReleaseServiceStub(self.channel)
-            release_request = TestReleaseRequest(name=release, timeout=timeout,
-                                                 cleanup=cleanup)
+
+            release_request = TestReleaseRequest(
+                name=release, timeout=timeout, cleanup=cleanup)
 
             content = self.get_release_content(release)
 

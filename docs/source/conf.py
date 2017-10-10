@@ -19,6 +19,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import sphinx_rtd_theme
 
 
 # -- General configuration ------------------------------------------------
@@ -30,25 +31,10 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
-    'oslo_config.sphinxconfiggen',
-    'oslo_policy.sphinxpolicygen'
-]
-
-# oslo_config.sphinxconfiggen options
-config_generator_config_file = '../../etc/armada/config-generator.conf'
-sample_config_basename = '_static/armada'
-
-# oslo_policy.sphinxpolicygen options
-
-policy_generator_config_file = '../../etc/armada/policy-generator.conf'
-sample_policy_basename = '_static/armada'
+extensions = []
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = []
+# templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -97,8 +83,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-import sphinx_rtd_theme
-html_theme = "sphinx_rtd_theme"
+html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -110,7 +95,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 
 # -- Options for HTMLHelp output ------------------------------------------
@@ -165,6 +150,6 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'Armada', u'Armada Documentation',
-     author, 'Armada', 'A python REST orchestrator.',
+     author, 'Armada', 'One line description of project.',
      'Miscellaneous'),
 ]
