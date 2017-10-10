@@ -16,7 +16,7 @@ PasteDeploy>=1.5.2
 
 # API
 falcon==1.1.0
-gunicorn==19.7.1
+# gunicorn==19.7.1
 
 # CLI
 click>=6.7
